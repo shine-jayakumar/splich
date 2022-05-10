@@ -1,7 +1,9 @@
 # Splich.py
 # Splits files into parts, or in chunk_size
 # Splich is a file splitting tool that allows you to split a file into parts, and reassembles them
-#
+
+# https://github.com/shine-jayakumar/splich
+
 # Author: Shine Jayakumar
 # https://github.com/shine-jayakumar
 #
