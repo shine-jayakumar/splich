@@ -35,7 +35,7 @@ import argparse
 import hashlib
 from datetime import datetime
 
-VERSION = 'v.1.0'
+VERSION = 'v.1.1'
 
 VERBOSE = False
 
@@ -90,7 +90,7 @@ def file_split(file, parts=None, chunk_size=None):
 
             chunk = fh.read(segment_size)
             part_filename = os.path.join(fdir, f'{fname}_{start_time}_{fpart}.prt')
-            vvprint(f'{part_filename} Segment size: {segment_size}')
+            vvprint(f'{part_filename} Segment size: {segment_size} bytes')
             with open(part_filename, 'wb') as chunk_fh:
                 chunk_fh.write(chunk)
             fpart += 1
@@ -115,34 +115,28 @@ def file_stitch(file, outfile=None, hashfile=None):
     fname = fname.split('.')[0]
     
     file_parts = glob.glob(os.path.join(fdir,  f'{fname}_*.prt'))
-    
+
+    if not file_parts:
+        raise FileNotFoundError('Split files not found')
+
     if outfile:
         # if just the filename
         if os.path.split(outfile)[0] == '':
             # create the file in input dir (fdir)
             outfile = os.path.join(fdir, outfile)
+    
+    vvprint(f'Output: {outfile or file}')
 
     with open(outfile or file, 'wb') as fh:
         for filename in file_parts:
             buffer = b''
+            vvprint(f'Reading {filename}')
             with open(filename, 'rb') as prt_fh:
                 buffer = prt_fh.read()
                 fh.write(buffer)
 
-    # buffer = b''
-    # for filename in file_parts:
-    #     with open(filename, 'rb') as fh:
-    #         buffer += fh.read()
+    vvprint(f'Written {os.path.getsize(outfile or file)} bytes')
 
-    # if outfile:
-    #     # if just the filename
-    #     if os.path.split(outfile)[0] == '':
-    #         # create the file in input dir (fdir)
-    #         outfile = os.path.join(fdir, outfile)
-
-    # with open(outfile or file, 'wb') as fh:
-    #     fh.write(buffer)
-    
     if hashfile:
         if checkhash(outfile or file, hashfile):
             print('Hash verified')
