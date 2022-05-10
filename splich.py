@@ -35,6 +35,8 @@ from datetime import datetime
 
 VERSION = 'v.1.0'
 
+VERBOSE = False
+
 
 def file_split(file, parts=None, chunk_size=None):
     '''
@@ -46,9 +48,12 @@ def file_split(file, parts=None, chunk_size=None):
         return False
         
     fsize = os.path.getsize(file)
-
+    
     if chunk_size and chunk_size > fsize:
         raise ValueError('Chunk size cannot be greater than file size')
+
+    vvprint(f'Source file: {file}')
+    vvprint(f'Size: {fsize}')
 
     segment_size = 0
 
@@ -60,11 +65,16 @@ def file_split(file, parts=None, chunk_size=None):
     if segment_size < 1:
         raise ValueError('At least 1 byte required per part')
 
+    vvprint(f'Segment Size: {segment_size}')
+
     fdir, fname = os.path.split(file)
     fname = fname.split('.')[0]
     
     hash = gethash(file)
     start_time = datetime.today().strftime("%m%d%Y_%H%M")
+
+    vvprint(f'Hash: {hash}\n\n')
+    vvprint(f'Reading file: {file}')
 
     with open(file,'rb') as fh:
         fpart = 1
@@ -78,10 +88,11 @@ def file_split(file, parts=None, chunk_size=None):
 
             chunk = fh.read(segment_size)
             part_filename = os.path.join(fdir, f'{fname}_{start_time}_{fpart}.prt')
+            vvprint(f'{part_filename} Segment size: {segment_size}')
             with open(part_filename, 'wb') as chunk_fh:
                 chunk_fh.write(chunk)
             fpart += 1
-        
+        vvprint(f'Hashfile: {fname}_hash_{start_time}')
         with open(f'{fname}_hash_{start_time}', 'w') as hashfile:
             hashfile.write(hash)
 
@@ -103,11 +114,6 @@ def file_stitch(file, outfile=None, hashfile=None):
     
     file_parts = glob.glob(os.path.join(fdir,  f'{fname}_*.prt'))
     
-    buffer = b''
-    for filename in file_parts:
-        with open(filename, 'rb') as fh:
-            buffer += fh.read()
-
     if outfile:
         # if just the filename
         if os.path.split(outfile)[0] == '':
@@ -115,7 +121,25 @@ def file_stitch(file, outfile=None, hashfile=None):
             outfile = os.path.join(fdir, outfile)
 
     with open(outfile or file, 'wb') as fh:
-        fh.write(buffer)
+        for filename in file_parts:
+            buffer = b''
+            with open(filename, 'rb') as prt_fh:
+                buffer = prt_fh.read()
+                fh.write(buffer)
+
+    # buffer = b''
+    # for filename in file_parts:
+    #     with open(filename, 'rb') as fh:
+    #         buffer += fh.read()
+
+    # if outfile:
+    #     # if just the filename
+    #     if os.path.split(outfile)[0] == '':
+    #         # create the file in input dir (fdir)
+    #         outfile = os.path.join(fdir, outfile)
+
+    # with open(outfile or file, 'wb') as fh:
+    #     fh.write(buffer)
     
     if hashfile:
         if checkhash(outfile or file, hashfile):
@@ -146,6 +170,12 @@ def checkhash(file, hashfile):
 
     return curhash == orghash
     
+
+def vvprint(text):
+    global VERBOSE
+    if VERBOSE:
+        print(text)
+
         
 # ====================================================
 # Argument parsing
@@ -180,6 +210,7 @@ split_or_stich.add_argument('-st', '--stitch', action='store_true', help='stitch
 
 parser.add_argument('-hf', '--hashfile',  type=str, metavar='', help='file containing hash of the original file')
 parser.add_argument('-o', '--outfile',  type=str, metavar='', help='write stitched file to (default - same as the input file)')
+parser.add_argument('-vv', '--verbose',  action='store_true', help='verbose mode')
 parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}')
 
 # if args.prox and (args.lport is None or args.rport is None):
@@ -190,6 +221,8 @@ args = parser.parse_args()
 if args.split and (not args.parts and not args.size):
     parser.error('--split requires --parts or --size to be specified')
 
+if args.verbose:
+    VERBOSE = True
 
 file = args.filename
 
