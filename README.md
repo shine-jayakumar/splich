@@ -1,13 +1,13 @@
-# Splich
+# Splich (Split-Stitch)
 ![MIT License](https://img.shields.io/github/license/shine-jayakumar/Covid19-Exploratory-Analysis-With-SQL)
 
-### Splits a file into parts or stitches them back to original
+### Splits a file into parts or stitches them back
 
 <p align="center">
 <img src="https://github.com/shine-jayakumar/splich/blob/main/splich_logo.png"/>
 </p>
 
-Splich, short for split-stitch, is a simple file splitting tool written in python that can split a file into parts, and stitch them back together.
+Splich, because it can split or stitch, is a simple file splitting tool written in python that can split a file into parts, and stitch them back together.
 
 **Table of Contents**
 - [Features](#Features "Features")
