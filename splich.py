@@ -115,7 +115,8 @@ def file_stitch(file, outfile=None, hashfile=None):
     fname = fname.split('.')[0]
     
     file_parts = glob.glob(os.path.join(fdir,  f'{fname}_*.prt'))
-
+    file_parts = sort_file_parts(file_parts)
+    
     if not file_parts:
         raise FileNotFoundError('Split files not found')
 
@@ -168,10 +169,33 @@ def checkhash(file, hashfile):
     
 
 def vvprint(text):
+    '''
+    print function to function only when verbose mode is on
+    '''
     global VERBOSE
     if VERBOSE:
         print(text)
 
+
+def getpartno(filepart):
+    '''
+    Returns the part number from a part filename
+    Ex: flask_05112022_1048_3.prt -> 3
+    '''
+    return int(filepart.split('_')[-1].split('.')[0])
+
+
+def sort_file_parts(file_part_list):
+    '''
+    Returns a sorted list of part filenames based on the part number
+    Ex: ['flask_05112022_1048_3.prt', 'flask_05112022_1048_1.prt', 'flask_05112022_1048_2.prt'] ->
+        ['flask_05112022_1048_1.prt', 'flask_05112022_1048_2.prt', 'flask_05112022_1048_3.prt']
+    '''
+    # creates list of (prt_no, part)
+    fparts = [(getpartno(prt), prt) for prt in file_part_list]
+    fparts.sort(key=lambda x: x[0])
+    fparts = [prt[1] for prt in fparts]
+    return fparts
         
 # ====================================================
 # Argument parsing
