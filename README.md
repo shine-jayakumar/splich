@@ -77,6 +77,12 @@ splich.py ebook.pdf --split --size 100000
 ```
 splich.py flask.pdf --split --parts 10
 ```
+<img src="https://github.com/shine-jayakumar/splich/blob/main/splich_into_parts.JPG"/>
+
 ```
-splich.py flask.pdf --stitch -o flask_stitched -hf flask_hash_05112022_1048 --verbose
+splich.py flask.pdf --stitch -o flask_stitched -hf flask_hash_05112022_1126 --verbose
 ```
+<img src="https://github.com/shine-jayakumar/splich/blob/main/splich_stitch.JPG"/>
+
+## LICENSE
+[MIT](https://github.com/shine-jayakumar/splich/blob/main/LICENSE)
