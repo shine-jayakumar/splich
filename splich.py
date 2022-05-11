@@ -35,7 +35,7 @@ import argparse
 import hashlib
 from datetime import datetime
 
-VERSION = 'v.1.1'
+VERSION = 'v.1.2'
 
 VERBOSE = False
 
