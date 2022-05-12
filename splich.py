@@ -35,7 +35,7 @@ import argparse
 import hashlib
 from datetime import datetime
 
-VERSION = 'v.1.2'
+VERSION = 'v.1.3'
 
 VERBOSE = False
 
@@ -70,8 +70,10 @@ def file_split(file, parts=None, chunk_size=None):
     vvprint(f'Segment Size: {segment_size}')
 
     fdir, fname = os.path.split(file)
-    fname = fname.split('.')[0]
+    # fname = fname.split('.')[0]
+    fname = os.path.splitext(fname)[0]
     
+    vvprint('Generating hash')
     hash = gethash(file)
     start_time = datetime.today().strftime("%m%d%Y_%H%M")
 
@@ -94,8 +96,10 @@ def file_split(file, parts=None, chunk_size=None):
             with open(part_filename, 'wb') as chunk_fh:
                 chunk_fh.write(chunk)
             fpart += 1
-        vvprint(f'Hashfile: {fname}_hash_{start_time}')
-        with open(f'{fname}_hash_{start_time}', 'w') as hashfile:
+
+        hashfile_path = os.path.join(fdir, f'{fname}_hash_{start_time}')
+        vvprint(f'Hashfile: {hashfile_path}')
+        with open(hashfile_path, 'w') as hashfile:
             hashfile.write(hash)
 
         return True   
@@ -112,7 +116,8 @@ def file_stitch(file, outfile=None, hashfile=None):
         return False
 
     fdir, fname = os.path.split(file)
-    fname = fname.split('.')[0]
+    # fname = fname.split('.')[0]
+    fname = os.path.splitext(fname)[0]
     
     file_parts = glob.glob(os.path.join(fdir,  f'{fname}_*.prt'))
     file_parts = sort_file_parts(file_parts)
@@ -137,8 +142,9 @@ def file_stitch(file, outfile=None, hashfile=None):
                 fh.write(buffer)
 
     vvprint(f'Written {os.path.getsize(outfile or file)} bytes')
-
+    
     if hashfile:
+        print('Verifying hash')
         if checkhash(outfile or file, hashfile):
             print('Hash verified')
         else:
