@@ -34,8 +34,10 @@ import glob
 import argparse
 import hashlib
 from datetime import datetime
+from configparser import ConfigParser
+import sys
 
-VERSION = 'v.1.3'
+VERSION = 'v.1.4'
 
 VERBOSE = False
 
@@ -97,10 +99,19 @@ def file_split(file, parts=None, chunk_size=None):
                 chunk_fh.write(chunk)
             fpart += 1
 
-        hashfile_path = os.path.join(fdir, f'{fname}_hash_{start_time}')
+        # hashfile generation
+        hashfilename = f'{fname}_hash_{start_time}'
+        hashfile_path = os.path.join(fdir, hashfilename)
         vvprint(f'Hashfile: {hashfile_path}')
         with open(hashfile_path, 'w') as hashfile:
             hashfile.write(hash)
+        
+        # auto-stitch config file generation
+        vvprint('Generating auto-stitch config file')
+        if generate_stitch_config(filename=file, hashfile=hashfilename):
+            vvprint('Saved stitch.ini')
+        else:
+            vvprint('Could not create auto-stitch config. Stitch files manually.')
 
         return True   
 
@@ -203,6 +214,30 @@ def sort_file_parts(file_part_list):
     fparts = [prt[1] for prt in fparts]
     return fparts
         
+
+def generate_stitch_config(filename, hashfile):
+    '''
+    Generates auto-stitch config file
+    '''
+    try:
+        with open('stitch.ini', 'w') as configfile:
+            config = ConfigParser()
+            config.add_section('stitch')
+            config.set('stitch', 'filename', filename)
+            config.set('stitch', 'hashfile', hashfile)
+
+            config.add_section('settings')
+            config.set('settings', 'verbose', 'True')
+            config.write(configfile)
+    except Exception as ex:
+        print(f'Error while creating auto-stitch config file: {str(ex)}')
+        stitch_config_path = os.path.join(os.getcwd(), 'stitch.ini')
+        if os.path.exists(stitch_config_path):
+            os.remove(stitch_config_path)
+        return False
+    return True
+
+
 # ====================================================
 # Argument parsing
 # ====================================================
@@ -239,8 +274,24 @@ parser.add_argument('-o', '--outfile',  type=str, metavar='', help='write stitch
 parser.add_argument('-vv', '--verbose',  action='store_true', help='verbose mode')
 parser.add_argument('-v', '--version', action='version', version=f'%(prog)s {VERSION}')
 
-# if args.prox and (args.lport is None or args.rport is None):
-#     parser.error("--prox requires --lport and --rport.")
+# If config file exists - auto stitch
+if os.path.exists(os.path.join(os.getcwd(), 'stitch.ini')):
+    print('Found config file - stitch.ini')
+    config = ConfigParser()
+    config.read('stitch.ini')
+    fname = config.get('stitch', 'filename')
+    hashfile = config.get('stitch', 'hashfile')
+    verbose = config.getboolean('settings', 'verbose')
+
+    if verbose == True:
+        VERBOSE = True
+    try:
+        file_stitch(fname, outfile=None, hashfile=hashfile)
+    except FileNotFoundError as ex:
+        print(f'Error: {str(ex)}')
+    
+    sys.exit()
+
 
 args = parser.parse_args()
 
